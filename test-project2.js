@@ -24,7 +24,6 @@
 
     var locals = ['locals', 'msg1', 'msg2', 'msg3'];
 
-    // ---------------- Problem 1: MakeMultiFilter
     if (typeof MakeMultiFilter !== 'function') {
       console.error('MakeMultiFilter is not a function:', typeof MakeMultiFilter);
       msg1 = 'FAILURE';
@@ -80,7 +79,6 @@
           msg1 = 'FAILURE';
         }
 
-        // Ensure separate instances work (no shared global state)
         fB(function (x) { return x !== 1; }, function (arr) {
           if (!sameArray([2, 3, 4], arr)) {
             console.error('Second filterer looks like it shares state (global var issue):', arr);
@@ -97,7 +95,7 @@
     }
     console.log('Test MakeMultiFilter:', msg1);
 
-    // ---------------- Problem 2: TemplateProcessor
+
     if (typeof TemplateProcessor !== 'function') {
       console.error('TemplateProcessor is not a function:', typeof TemplateProcessor);
       msg2 = 'FAILURE';
@@ -116,7 +114,7 @@
     }
     console.log('Test TemplateProcessor:', msg2);
 
-    // ---------------- Problem 3: Global namespace pollution check
+
     locals.forEach(function (name) {
       if (root[name] !== undefined) {
         console.error('Found leaked global symbol:', name);
@@ -125,7 +123,6 @@
     });
     console.log('Test Problem 3:', msg3);
 
-    // Keep this global for the Node test runner / browser page
     root.Project2Results = {
       p1Message: msg1,
       p2Message: msg2,
@@ -143,16 +140,3 @@
 
   runProject2Tests();
 }());
-
-
-
-
-
-
-
-
-
-
-
-
-ChatGPT can make mistakes. Check important info.
