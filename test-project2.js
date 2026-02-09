@@ -95,7 +95,6 @@
     }
     console.log('Test MakeMultiFilter:', msg1);
 
-
     if (typeof TemplateProcessor !== 'function') {
       console.error('TemplateProcessor is not a function:', typeof TemplateProcessor);
       msg2 = 'FAILURE';
@@ -113,7 +112,6 @@
       locals.push('tpl', 'proc', 'dict', 'out');
     }
     console.log('Test TemplateProcessor:', msg2);
-
 
     locals.forEach(function (name) {
       if (root[name] !== undefined) {
