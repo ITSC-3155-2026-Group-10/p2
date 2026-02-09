@@ -1,156 +1,158 @@
 'use strict';
-/*global TemplateProcessor*/
-
-/*
- * This file tests the Project #2 JavaScript assignment problems. It prints what
- * it finds to the console log and updates the text being displayed in the window with a
- * summary of the results.
- */
-
+/* global MakeMultiFilter, TemplateProcessor */
 /* eslint-env browser, node */
 
-// Result message for Problems 1-3
-var p1Message = 'SUCCESS';
-var p2Message = 'SUCCESS';
-var p3Message = 'SUCCESS';
+(function () {
+  var root = (typeof window !== 'undefined') ? window : global;
 
-// Keep track of all the var statements
-var varDeclared = ['varDeclared', 'p1Message', 'p2Message', 'p3Message'];
-
-// Utility functions
-function arraysAreTheSame(a1, a2) {
-  if (!Array.isArray(a1) || !Array.isArray(a2) || (a1.length !== a2.length)) {
-    return false;
-  }
-  for (var i = 0; i < a1.length; i += 1) {
-    if (a1[i] !== a2[i]) {
+  function sameArray(a, b) {
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) {
       return false;
     }
-  }
-  return true;
-}
-
-// ********************* Test MakeMultiFilter
-
-if (typeof MakeMultiFilter !== 'function') {
-  console.error('MakeMultiFilter is not a function', typeof MakeMultiFilter);
-  p1Message = 'FAILURE';
-} else {
-  var originalArray = [1, 2, 3];
-  var filterFunc = window.MakeMultiFilter(originalArray);
-
-  var secondArray = [1, 2, 3, 4];
-  var filterFuncTwo = window.MakeMultiFilter(secondArray);
-
-  if (typeof filterFunc !== 'function') {
-    console.error('MakeMultiFilter does not return a function', filterFunc);
-    p1Message = 'FAILURE';
-  } else {
-    var result = filterFunc();
-    if (!arraysAreTheSame([1, 2, 3], result)) {
-      console.error('filter function with no args does not return the original array', result);
-      p1Message = 'FAILURE';
-    }
-
-    var callbackPerformed = false;
-    result = filterFunc(function (item) {
-      return item !== 2;
-    }, function (callbackResult) {
-      callbackPerformed = true;
-      if (!arraysAreTheSame([1, 3], callbackResult)) {
-        console.error('filter function callback does not filter 2 correctly', callbackResult);
-        p1Message = 'FAILURE';
+    for (var i = 0; i < a.length; i += 1) {
+      if (a[i] !== b[i]) {
+        return false;
       }
-      if (!arraysAreTheSame([1, 2, 3], this)) {
-        console.error('filter function callback does not pass original array as this', this);
-        p1Message = 'FAILURE';
+    }
+    return true;
+  }
+
+  function runProject2Tests() {
+    var msg1 = 'SUCCESS';
+    var msg2 = 'SUCCESS';
+    var msg3 = 'SUCCESS';
+
+    var locals = ['locals', 'msg1', 'msg2', 'msg3'];
+
+    // ---------------- Problem 1: MakeMultiFilter
+    if (typeof MakeMultiFilter !== 'function') {
+      console.error('MakeMultiFilter is not a function:', typeof MakeMultiFilter);
+      msg1 = 'FAILURE';
+    } else {
+      var baseA = [1, 2, 3];
+      var fA = root.MakeMultiFilter(baseA);
+
+      var baseB = [1, 2, 3, 4];
+      var fB = root.MakeMultiFilter(baseB);
+
+      if (typeof fA !== 'function') {
+        console.error('MakeMultiFilter did not return a function:', fA);
+        msg1 = 'FAILURE';
+      } else {
+        var res = fA();
+        if (!sameArray([1, 2, 3], res)) {
+          console.error('Calling filterer with no args should return original array:', res);
+          msg1 = 'FAILURE';
+        }
+
+        var didCallback = false;
+        res = fA(function (x) { return x !== 2; }, function (arr) {
+          didCallback = true;
+
+          if (!sameArray([1, 3], arr)) {
+            console.error('Filtering out 2 failed:', arr);
+            msg1 = 'FAILURE';
+          }
+          if (!sameArray([1, 2, 3], this)) {
+            console.error('Callback "this" is not original array:', this);
+            msg1 = 'FAILURE';
+          }
+        });
+
+        if (!didCallback) {
+          console.error('Callback was not called');
+          msg1 = 'FAILURE';
+        }
+        if (res !== fA) {
+          console.error('Filterer should return itself for chaining:', res);
+          msg1 = 'FAILURE';
+        }
+
+        res = fA(function (x) { return x !== 3; });
+        if (res !== fA) {
+          console.error('Filterer should return itself for chaining (2):', res);
+          msg1 = 'FAILURE';
+        }
+
+        res = fA();
+        if (!sameArray([1], res)) {
+          console.error('Final currentArray should be [1]:', res);
+          msg1 = 'FAILURE';
+        }
+
+        // Ensure separate instances work (no shared global state)
+        fB(function (x) { return x !== 1; }, function (arr) {
+          if (!sameArray([2, 3, 4], arr)) {
+            console.error('Second filterer looks like it shares state (global var issue):', arr);
+            msg1 = 'FAILURE';
+          }
+          if (!sameArray([1, 2, 3, 4], this)) {
+            console.error('Callback "this" for second filterer is not original array:', this);
+            msg1 = 'FAILURE';
+          }
+        });
+
+        locals.push('baseA', 'fA', 'baseB', 'fB', 'res', 'didCallback');
+      }
+    }
+    console.log('Test MakeMultiFilter:', msg1);
+
+    // ---------------- Problem 2: TemplateProcessor
+    if (typeof TemplateProcessor !== 'function') {
+      console.error('TemplateProcessor is not a function:', typeof TemplateProcessor);
+      msg2 = 'FAILURE';
+    } else {
+      var tpl = 'My favorite month is {{month}} but not the day {{day}} or the year {{year}}';
+      var proc = new TemplateProcessor(tpl);
+      var dict = { month: 'July', day: '1', year: '2016' };
+      var out = proc.fillIn(dict);
+
+      if (out !== 'My favorite month is July but not the day 1 or the year 2016') {
+        console.error('TemplateProcessor fillIn produced unexpected output:', out);
+        msg2 = 'FAILURE';
+      }
+
+      locals.push('tpl', 'proc', 'dict', 'out');
+    }
+    console.log('Test TemplateProcessor:', msg2);
+
+    // ---------------- Problem 3: Global namespace pollution check
+    locals.forEach(function (name) {
+      if (root[name] !== undefined) {
+        console.error('Found leaked global symbol:', name);
+        msg3 = 'FAILURE';
       }
     });
+    console.log('Test Problem 3:', msg3);
 
-    if (!callbackPerformed) {
-      console.error('filter function callback not performed');
-      p1Message = 'FAILURE';
-    }
+    // Keep this global for the Node test runner / browser page
+    root.Project2Results = {
+      p1Message: msg1,
+      p2Message: msg2,
+      p3Message: msg3,
+    };
 
-    if (result !== filterFunc) {
-      console.error('filter function does not return itself', result);
-      p1Message = 'FAILURE';
+    if (typeof root.document !== 'undefined') {
+      root.onload = function () {
+        root.document.getElementById('p1').innerHTML = msg1;
+        root.document.getElementById('p2').innerHTML = msg2;
+        root.document.getElementById('p3').innerHTML = msg3;
+      };
     }
-
-    result = filterFunc(function (item) {
-      return item !== 3;
-    });
-    if (result !== filterFunc) {
-      console.error('filter function does not return itself 2', result);
-      p1Message = 'FAILURE';
-    }
-
-    result = filterFunc();
-    if (!arraysAreTheSame([1], result)) {
-      console.error('filter function callback does not filter 3 correctly', result);
-      p1Message = 'FAILURE';
-    }
-    result = filterFuncTwo(function (item) {
-      return item !== 1;
-    }, function (callbackResult) {
-      if (!arraysAreTheSame([2, 3, 4], callbackResult)) {
-        console.error('second filter does not filter 1 (check for global variable usage)', callbackResult);
-        p1Message = 'FAILURE';
-      }
-      if (!arraysAreTheSame([1, 2, 3, 4], this)) {
-        console.error('filter function callback does not pass original array as this', this);
-        p1Message = 'FAILURE';
-      }
-    });
   }
-}
-console.log('Test MakeMultiFilter:', p1Message);
 
-// ********************* Test TemplateProcessor
+  runProject2Tests();
+}());
 
-if (typeof TemplateProcessor !== 'function') {
-  console.error('TemplateProcessor is not a function', typeof TemplateProcessor);
-  p2Message = 'FAILURE';
-} else {
-  var template = 'My favorite month is {{month}} but not the day {{day}} or the year {{year}}';
-  var dateTemplate = new TemplateProcessor(template);
 
-  var dictionary = { month: 'July', day: '1', year: '2016' };
-  var str = dateTemplate.fillIn(dictionary);
 
-  if (str !== 'My favorite month is July but not the day 1 or the year 2016') {
-    console.error('TemplateProcessor didn\'t work');
-    p2Message = 'FAILURE';
-  }
-  varDeclared.push('template');
-  varDeclared.push('dateTemplate');
-  varDeclared.push('dictionary');
-  varDeclared.push('str');
-}
-console.log('Test TemplateProcessor:', p2Message);
 
-// ********************* Test to see if the symbols we defined are in the global address space
 
-varDeclared.forEach(function (sym) {
-  if (window[sym] !== undefined) {
-    console.error('Found my symbol', sym, 'in DOM');
-    p3Message = 'FAILURE';
-  }
-});
-console.log('Test Problem 3:', p3Message);
 
-// Store the result back into the global space under the object name Project2Results
-window.Project2Results = {
-  p1Message: p1Message,
-  p2Message: p2Message,
-  p3Message: p3Message,
-};
 
-// Once the browser loads our companion HTML in test-project2.html we
-// update it with the results of our testing. This code will make more
-// sense after the next project.
-window.onload = function () {
-  document.getElementById('p1').innerHTML = p1Message;
-  document.getElementById('p2').innerHTML = p2Message;
-  document.getElementById('p3').innerHTML = p3Message;
-};
+
+
+
+
+
+ChatGPT can make mistakes. Check important info.
